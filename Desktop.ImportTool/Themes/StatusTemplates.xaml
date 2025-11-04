@@ -1,0 +1,184 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+                    xmlns:converters="clr-namespace:Desktop.ImportTool.Converters">
+
+    <converters:StatusToButtonEnabledConverter x:Key="StatusToButtonEnabledConverter" />
+
+    <DataTemplate x:Key="TasksStatusCellTemplate">
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid Grid.Column="0"
+                  VerticalAlignment="Center">
+                <ContentControl Content="{Binding}" Margin="0,0,8,0">
+                    <ContentControl.Style>
+                        <Style TargetType="ContentControl">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Status}" Value="InProgress">
+                                    <Setter Property="ContentTemplate">
+                                        <Setter.Value>
+                                            <DataTemplate>
+                                                <ProgressBar IsIndeterminate="True" Height="18" />
+                                            </DataTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Status}" Value="Queued">
+                                    <Setter Property="ContentTemplate">
+                                        <Setter.Value>
+                                            <DataTemplate>
+                                                <TextBlock Text="Queued" />
+                                            </DataTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Status}" Value="Paused">
+                                    <Setter Property="ContentTemplate">
+                                        <Setter.Value>
+                                            <DataTemplate>
+                                                <TextBlock Text="Paused" />
+                                            </DataTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Status}" Value="Finished">
+                                    <Setter Property="ContentTemplate">
+                                        <Setter.Value>
+                                            <DataTemplate>
+                                                <TextBlock Text="Finished" />
+                                            </DataTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Status}" Value="Failed">
+                                    <Setter Property="ContentTemplate">
+                                        <Setter.Value>
+                                            <DataTemplate>
+                                                <TextBlock Text="Failed" />
+                                            </DataTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ContentControl.Style>
+                </ContentControl>
+            </Grid>
+            <StackPanel Orientation="Horizontal" 
+                        Grid.Column="1">
+                <Button Style="{StaticResource DarkThemeIconButton}" 
+                    Margin="0,0,0,0"
+                    Command="{Binding DataContext.RunTaskCommand, RelativeSource={RelativeSource AncestorType={x:Type telerik:RadGridView}}}"
+                    CommandParameter="{Binding}"
+                    ToolTip="Run task"
+                    
+                    IsEnabled="{Binding Status, Converter={StaticResource StatusToButtonEnabledConverter}, ConverterParameter=Run}">
+                    <Path Stroke="Green" StrokeThickness="2.6" Fill="Transparent"
+                          Data="M6,4 L18,12 L6,20 Z" Width="21" Height="21"/>
+                </Button>
+                <Button Style="{StaticResource DarkThemeIconButton}" 
+                    Margin="0,0,0,0"
+                    Command="{Binding DataContext.PauseTaskCommand, RelativeSource={RelativeSource AncestorType={x:Type telerik:RadGridView}}}"
+                    CommandParameter="{Binding}" 
+                    ToolTip="Pause task"
+                    
+                    IsEnabled="{Binding Status, Converter={StaticResource StatusToButtonEnabledConverter}, ConverterParameter=Pause}">
+                    <Path Stroke="Orange" StrokeThickness="2.6" Fill="Transparent"
+                      Data="M8,4 L8,20 M15,4 L15,20" Width="21" Height="21"/>
+                </Button>
+                <Button Style="{StaticResource DarkThemeIconButton}"
+                    Command="{Binding DataContext.DeleteTaskCommand, RelativeSource={RelativeSource AncestorType={x:Type telerik:RadGridView}}}"
+                    
+                    HorizontalAlignment="Right"
+                    CommandParameter="{Binding}"
+                    ToolTip="Delete Task">
+                    <Path Stroke="Red" StrokeThickness="2.6" Fill="Transparent"
+                      Data="M10.5,3.5 A7,7 0 1 1 10.49,3.5 M6.5,14.5 L14.5,6.5"
+                      Width="21" Height="21"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </DataTemplate>
+
+    <DataTemplate x:Key="HistoryStatusCellTemplate">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid Grid.Column="0"
+                  VerticalAlignment="Center">
+                <ContentControl Content="{Binding}">
+                    <ContentControl.Style>
+                        <Style TargetType="ContentControl">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Status}" Value="InProgress">
+                                    <Setter Property="ContentTemplate">
+                                        <Setter.Value>
+                                            <DataTemplate>
+                                                <ProgressBar IsIndeterminate="True" Height="18" />
+                                            </DataTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Status}" Value="Queued">
+                                    <Setter Property="ContentTemplate">
+                                        <Setter.Value>
+                                            <DataTemplate>
+                                                <TextBlock Text="Queued" />
+                                            </DataTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Status}" Value="Paused">
+                                    <Setter Property="ContentTemplate">
+                                        <Setter.Value>
+                                            <DataTemplate>
+                                                <TextBlock Text="Paused" />
+                                            </DataTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Status}" Value="Finished">
+                                    <Setter Property="ContentTemplate">
+                                        <Setter.Value>
+                                            <DataTemplate>
+                                                <TextBlock Text="Finished" />
+                                            </DataTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Status}" Value="Failed">
+                                    <Setter Property="ContentTemplate">
+                                        <Setter.Value>
+                                            <DataTemplate>
+                                                <TextBlock Text="Failed" />
+                                            </DataTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ContentControl.Style>
+                </ContentControl>
+            </Grid>
+            <Button Style="{StaticResource DarkThemeIconButton}"
+                    Command="{Binding DataContext.DeleteHistoryRowCommand, RelativeSource={RelativeSource AncestorType={x:Type telerik:RadGridView}}}"
+                    Grid.Column="2"
+                    HorizontalAlignment="Right"
+                    CommandParameter="{Binding}"
+                    ToolTip="Delete History Row">
+                <Path Stroke="Red" StrokeThickness="2.6" Fill="Transparent"
+                      Data="M10.5,3.5 A7,7 0 1 1 10.49,3.5 M6.5,14.5 L14.5,6.5"
+                      Width="21" Height="21"/>
+            </Button>
+            </Grid>
+    </DataTemplate>
+
+</ResourceDictionary>

@@ -1,0 +1,135 @@
+﻿<UserControl x:Class="Desktop.ImportTool.Views.TasksView"
+		xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+        xmlns:behaviors="clr-namespace:Desktop.ImportTool.Behaviors"
+        xmlns:viewModel="clr-namespace:Desktop.ImportTool.ViewModels">
+
+    <UserControl.DataContext>
+        <viewModel:TasksViewModel />
+    </UserControl.DataContext>
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Themes/StatusTemplates.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Border Background="#393939" Height="38" Grid.Row="0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="1"/>
+                </Grid.RowDefinitions>
+                <StackPanel Orientation="Horizontal" Grid.Row="0" DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,0">
+                    <Button Style="{StaticResource DarkThemeIconButton}" Command="{Binding MoveTasksToStartCommand}" ToolTip="Move to Start">
+                        <Path Style="{StaticResource DarkThemeIconPath}" StrokeThickness="2.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" 
+                                  StrokeLineJoin="Round" Fill="Transparent"
+                                  Data="M10.5,17.5 L10.5,5.5 M6,10.5 L10.5,5.5 L15,10.5 M5,3.5 L16,3.5"
+                                  Width="21" Height="21"/>
+                    </Button>
+                    <Button Style="{StaticResource DarkThemeIconButton}" Command="{Binding MoveUpCommand}" ToolTip="Move Up">
+                        <Path Style="{StaticResource DarkThemeIconPath}" StrokeThickness="2.6"
+                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent"
+                                  Data="M10.5,17.5 L10.5,5.5 M6,10.5 L10.5,5.5 L15,10.5"
+                                  Width="21" Height="21"/>
+                    </Button>
+                    <Button Style="{StaticResource DarkThemeIconButton}" Command="{Binding MoveDownCommand}" ToolTip="Move Down">
+                        <Path Style="{StaticResource DarkThemeIconPath}" StrokeThickness="2.6"
+                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent"
+                                  Data="M10.5,5.5 L10.5,17.5 M6,12.5 L10.5,17.5 L15,12.5"
+                                  Width="21" Height="21"/>
+                    </Button>
+                    <Button Style="{StaticResource DarkThemeIconButton}" Command="{Binding MoveTasksToFinishCommand}" ToolTip="Move to Finish">
+                        <Path Style="{StaticResource DarkThemeIconPath}" StrokeThickness="2.6"
+                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                  StrokeLineJoin="Round" Fill="Transparent"
+                                  Data="M10.5,5.5 L10.5,17.5 M6,12.5 L10.5,17.5 L15,12.5 M5,19.5 L16,19.5"
+                                  Width="21" Height="21"/>
+                    </Button>
+                    <Button Style="{StaticResource DarkThemeIconButton}" 
+                                Margin="0,0,0,0"
+                                Command="{Binding RunSelectedTasksCommand}"
+                                ToolTip="Run selected task(s)">
+                        <Path Stroke="Green" StrokeThickness="2.6" Fill="Transparent" 
+                                  Data="M6,4 L18,12 L6,20 Z" Width="21" Height="21"/>
+                    </Button>
+                    <Button Style="{StaticResource DarkThemeIconButton}"
+                                Command="{Binding PauseSelectedTasksCommand}"
+                                ToolTip="Pause selected task(s)"
+                                Margin="0,0,0,0">
+                        <Path Stroke="Orange" StrokeThickness="2.6" Fill="Transparent"
+                                  Data="M8,4 L8,20 M15,4 L15,20" Width="21" Height="21"/>
+                    </Button>
+                    <Button Style="{StaticResource DarkThemeIconButton}" Command="{Binding DeleteSelectedTasksCommand}" ToolTip="Delete">
+                        <Path Style="{StaticResource DarkThemeDeletePath}" StrokeThickness="2.6" Fill="Transparent"
+                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                  Data="M10.5,3.5 A7,7 0 1 1 10.49,3.5 M6.5,14.5 L14.5,6.5"
+                                  Width="21" Height="21"/>
+                    </Button>
+                </StackPanel>
+                <Rectangle Grid.Row="1" Height="1" Fill="#555" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"/>
+            </Grid>
+        </Border>
+        <telerik:RadGridView x:Name="TasksGrid"
+                             ItemsSource="{Binding TasksView}"
+                             behaviors:GridViewSelectionBehavior.BindableSelectedItems="{Binding SelectedTasks, Mode=TwoWay}"
+                             AutoGenerateColumns="False"
+                             SelectionMode="Extended"
+                             GroupRenderMode="Flat" 
+                             Margin="0"
+                             Grid.Row="1"
+                             RowIndicatorVisibility="Collapsed"
+                             ShowGroupPanel="False"
+                             HorizontalAlignment="Stretch"
+                             HorizontalContentAlignment="Stretch"
+                             Background="#373737"
+                             BorderBrush="Transparent"
+                             VirtualizingPanel.IsVirtualizing="True"
+                             VirtualizingPanel.IsContainerVirtualizable="True"
+                             ScrollViewer.CanContentScroll="False"
+                             ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             CanUserSortColumns="False"
+                             CanUserFreezeColumns="False"
+                             GridLinesVisibility="Horizontal"
+                             HorizontalGridLinesBrush="DimGray"
+                             IsReadOnly="True"
+                             telerik:StyleManager.Theme="Expression_Dark"
+                             AlternationCount="1">
+
+            <telerik:RadGridView.RowStyle>
+                <Style TargetType="telerik:GridViewRow">
+                    <Setter Property="Padding" Value="3" />
+                    <Setter Property="Foreground" Value="{telerik:Windows8Resource ResourceKey=MarkerBrush}" />
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="BorderBrush" Value="Transparent" />
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    <Setter Property="VerticalContentAlignment" Value="Top" />
+                    <Setter Property="BorderThickness" Value="2" />
+                    <Setter Property="KeyboardNavigation.TabNavigation" Value="Local" />
+                </Style>
+            </telerik:RadGridView.RowStyle>
+
+            <telerik:RadGridView.Columns>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding TaskOrder}"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding Source}" Header="Source"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding Target}" Header="Target"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding CreationTime}" Header="Created"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding Status}" Header="Status"
+                                            CellTemplate="{StaticResource TasksStatusCellTemplate}"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding CreatedBy}" Header="Created by"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding Metadata}" Header="Metadata"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding Settings}" Header="Settings"/>
+            </telerik:RadGridView.Columns>
+        </telerik:RadGridView>
+
+    </Grid>
+</UserControl>
