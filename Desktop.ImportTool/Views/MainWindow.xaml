@@ -7,6 +7,7 @@
         xmlns:local="clr-namespace:Desktop.ImportTool.Views" 
         xmlns:converters="clr-namespace:Desktop.ImportTool.Converters"
         xmlns:viewmodels="clr-namespace:Desktop.ImportTool.ViewModels"
+        xmlns:svc="clr-namespace:Desktop.ImportTool.Services"
         mc:Ignorable="d"
         Title="MainWindow"
         Background="#2D2D2D"
@@ -23,6 +24,11 @@
                     Command="{Binding OpenTasksPaneCommand}"/>
                     <Button Content="History" Margin="2" Padding="6,2"
                     Command="{Binding OpenHistoryPaneCommand}"/>
+
+                    <ToggleButton Content="Tasks" Width="90" Margin="2"
+                  Command="{Binding TogglePaneCommand}" CommandParameter="Tasks" />
+                    <ToggleButton Content="History" Width="90" Margin="2"
+                  Command="{Binding TogglePaneCommand}" CommandParameter="History" />
                     <!--<telerik:RadToggleButton x:Name="ExplorerMenuItem"
                          IsChecked="{Binding ViewStateExplorer, Mode=TwoWay}">
                         Tasks
@@ -89,15 +95,17 @@
                         <telerik:RadPaneGroup x:Name="TasksPaneGroup" HorizontalAlignment="Stretch" >
                             <!-- Empty content intentionally (RestorePaneContents will replace it with the VM-created UserControl instance) -->
                             <telerik:RadPane x:Name="TasksPane"
-                                         Header="Tasks"
-                                         telerik:RadDocking.SerializationTag="Tasks"
-                                         IsSelected="{Binding IsTasksSelected, Mode=TwoWay}"/>
+                 Header="Tasks"
+                 telerik:RadDocking.SerializationTag="Tasks"
+                 IsSelected="{Binding IsTasksSelected, Mode=TwoWay}"
+                 svc:DockingBehavior.PaneId="Tasks" />
                         </telerik:RadPaneGroup>
                         <telerik:RadPaneGroup x:Name="HistoryPaneGroup" HorizontalAlignment="Stretch">
                             <telerik:RadPane x:Name="HistoryPane"
-                                         Header="History"
-                                         telerik:RadDocking.SerializationTag="History"
-                                         IsSelected="{Binding IsHistorySelected, Mode=TwoWay}"/>
+                 Header="History"
+                 telerik:RadDocking.SerializationTag="History"
+                 IsSelected="{Binding IsHistorySelected, Mode=TwoWay}"
+                 svc:DockingBehavior.PaneId="History" />
                         </telerik:RadPaneGroup>
                     </telerik:RadSplitContainer>
                 </telerik:RadDocking.DocumentHost>

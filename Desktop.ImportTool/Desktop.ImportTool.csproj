@@ -124,13 +124,18 @@
     <Compile Include="Converters\StatusToButtonEnabledConverter.cs" />
     <Compile Include="Infrastructure\IDockingService.cs" />
     <Compile Include="Infrastructure\RelayCommand.cs" />
+    <Compile Include="Models\PaneState.cs" />
     <Compile Include="Models\TaskModel.cs" />
     <Compile Include="Models\DBManager.cs" />
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Services\DockingBehavior.cs" />
+    <Compile Include="Services\DockingIntegration.cs" />
+    <Compile Include="Services\DockingLayoutService.cs" />
     <Compile Include="ViewModels\HistoryViewModel.cs" />
+    <Compile Include="ViewModels\MainViewModel.DockingExtensions.cs" />
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
     <Compile Include="Views\DockingExtensions.cs" />
     <Compile Include="Views\DockingService.cs" />
