@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using Desktop.ImportTool.Infrastructure;
 using Desktop.ImportTool.ViewModels;
 using Telerik.Windows.Controls;
 
@@ -44,7 +45,11 @@ namespace Desktop.ImportTool.Services
                 {
                     try
                     {
-                        var createdVm = new MainViewModel(svc);
+                        //var createdVm = new MainWindowViewModel(svc);
+                        IDockingService dockingSvc = svc as IDockingService;
+                        if (dockingSvc == null)
+                            throw new InvalidOperationException("svc must implement IDockingService");
+                        var createdVm = new MainWindowViewModel(dockingSvc);
                         mainWindow.DataContext = createdVm;
                     }
                     catch
