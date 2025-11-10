@@ -27,8 +27,7 @@
                     Command="{Binding OpenHistoryPaneCommand}"/>
 
                     <ToggleButton Content="Tasks" IsChecked="{Binding IsTasksPaneOpen, Mode=TwoWay}" />
-                    <ToggleButton Content="History" Width="90" Margin="2"
-                  Command="{Binding TogglePaneCommand}" CommandParameter="History" />
+                    <ToggleButton Content="History" IsChecked="{Binding IsHistoryPaneOpen, Mode=TwoWay}"  />
                     <!--<telerik:RadToggleButton x:Name="ExplorerMenuItem"
                          IsChecked="{Binding ViewStateExplorer, Mode=TwoWay}">
                         Tasks

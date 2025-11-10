@@ -25,6 +25,8 @@ namespace Desktop.ImportTool.Infrastructure
         // Returns true if a pane for the given key currently exists (docked or undocked).
         bool IsPaneOpen(string paneKey);
 
+        void ClosePane(string paneKey);
+
         // Raised when a pane is opened or closed. PaneKey is the key (e.g. "Tasks" / "History"), IsOpen indicates open state.
         event EventHandler<PaneStateChangedEventArgs> PaneStateChanged;
     }

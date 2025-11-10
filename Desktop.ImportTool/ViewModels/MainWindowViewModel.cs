@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Windows.Controls;
 using System.Windows.Input;
 using Desktop.ImportTool.Infrastructure;
 using Desktop.ImportTool.Models;
@@ -11,7 +10,7 @@ using Desktop.ImportTool.Views;
 
 namespace Desktop.ImportTool.ViewModels
 {
-    public class MainWindowViewModel : INotifyPropertyChanged
+    public partial class MainWindowViewModel : INotifyPropertyChanged
     {
         private readonly string dbFilePath = "C:\\ProgramData\\Cinegy\\Cinegy Convert\\CinegyImportTool.db";
         private readonly DBManager manager;
@@ -45,6 +44,7 @@ namespace Desktop.ImportTool.ViewModels
 
         private readonly IDockingService _dockingService;
 
+        // -- PATCH BEGIN: Toggle open/close via bools --
         private bool _isTasksPaneOpen;
         public bool IsTasksPaneOpen
         {
@@ -54,24 +54,26 @@ namespace Desktop.ImportTool.ViewModels
                 if (_isTasksPaneOpen == value) return;
                 _isTasksPaneOpen = value;
                 OnPropertyChanged(nameof(IsTasksPaneOpen));
-
-                // Tell behavior to show/hide pane. This uses the singleton Instance.
-                // Requires the behavior to be attached in the visual tree so Instance != null.
-                try
-                {
-                    DockingBehavior.Instance?.SetPaneVisibilityById("Tasks", value);
-                }
-                catch (Exception ex)
-                {
-                    // swallow or log
-                    System.Diagnostics.Debug.WriteLine("TogglePane error: " + ex);
-                }
+                if (value) _dockingService?.OpenPane("Tasks");
+                else _dockingService?.ClosePane("Tasks");
             }
         }
 
-        public MainWindowViewModel() : this(null) { }
+        private bool _isHistoryPaneOpen;
+        public bool IsHistoryPaneOpen
+        {
+            get => _isHistoryPaneOpen;
+            set
+            {
+                if (_isHistoryPaneOpen == value) return;
+                _isHistoryPaneOpen = value;
+                OnPropertyChanged(nameof(IsHistoryPaneOpen));
+                if (value) _dockingService?.OpenPane("History");
+                else _dockingService?.ClosePane("History");
+            }
+        }
+        // -- PATCH END --
 
-        // Preferred ctor: inject docking service (provided by View)
         public MainWindowViewModel(IDockingService dockingService)
         {
             _dockingService = dockingService;
@@ -91,7 +93,6 @@ namespace Desktop.ImportTool.ViewModels
             // Open commands: CanExecute returns false when pane already open.
             OpenTasksPaneCommand = new RelayCommand(_ => _dockingService?.OpenPane("Tasks"),
                                                     _ => !(_dockingService?.IsPaneOpen("Tasks") ?? false));
-
             OpenHistoryPaneCommand = new RelayCommand(_ => _dockingService?.OpenPane("History"),
                                                       _ => !(_dockingService?.IsPaneOpen("History") ?? false));
 
@@ -100,8 +101,6 @@ namespace Desktop.ImportTool.ViewModels
             {
                 _dockingService.PaneStateChanged += (s, e) =>
                 {
-                    // When pane state changes, refresh the commands' CanExecute.
-                    // RelayCommand has RaiseCanExecuteChanged used elsewhere in repo.
                     (OpenTasksPaneCommand as RelayCommand)?.RaiseCanExecuteChanged();
                     (OpenHistoryPaneCommand as RelayCommand)?.RaiseCanExecuteChanged();
                 };

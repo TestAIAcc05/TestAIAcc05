@@ -15,6 +15,7 @@ namespace Desktop.ImportTool.Views
         private readonly Window _owner;
         private readonly RadDocking _docking;
         private readonly RadPaneGroup _toolsGroup;
+        private readonly object _paneGroupHint;
 
         private readonly Dictionary<string, RadPane> _panes = new Dictionary<string, RadPane>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, PlacementInfo> _lastPlacement = new Dictionary<string, PlacementInfo>(StringComparer.OrdinalIgnoreCase);
@@ -24,24 +25,11 @@ namespace Desktop.ImportTool.Views
         private readonly Dictionary<string, bool> _lastIsOpen = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
         private readonly string[] _paneKeys = new[] { "Tasks", "History" };
 
-        public DockingService(Window owner, RadDocking docking, RadPaneGroup toolsGroup)
+        public DockingService(Window owner, RadDocking docking, object paneGroupHint)
         {
-            _owner = owner ?? throw new ArgumentNullException(nameof(owner));
-            _docking = docking ?? throw new ArgumentNullException(nameof(docking));
-            _toolsGroup = toolsGroup;
-
-            // Initialize last-known open state for monitored panes
-            foreach (var k in _paneKeys) _lastIsOpen[k] = false;
-
-            // Start a timer to monitor pane presence across docked/floating containers.
-            _stateTimer = new DispatcherTimer(DispatcherPriority.Background)
-            {
-                Interval = TimeSpan.FromMilliseconds(500)
-            };
-            _stateTimer.Tick += StateTimer_Tick;
-            // Initialize state immediately
-            UpdatePaneStatesAndRaiseIfChanged();
-            _stateTimer.Start();
+            _owner = owner;
+            _docking = docking;
+            _paneGroupHint = paneGroupHint;
         }
 
         public event EventHandler<PaneStateChangedEventArgs> PaneStateChanged;
@@ -148,6 +136,16 @@ namespace Desktop.ImportTool.Views
             _panes[paneKey] = pane;
             RaisePaneStateChanged(paneKey, true);
             SelectPane(pane);
+        }
+
+        public void ClosePane(string paneKey)
+        {
+            if (_owner is MainWindow mw)
+            {
+                mw.RemoveAllPanesForKey(paneKey);
+                // Raise event: assuming you want to tell when Pane is closed
+                PaneStateChanged?.Invoke(this, new PaneStateChangedEventArgs(paneKey, false)); // false=open/closed
+            }
         }
 
         public bool IsPaneOpen(string paneKey)

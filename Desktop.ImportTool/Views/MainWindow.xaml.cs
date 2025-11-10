@@ -151,26 +151,6 @@ namespace Desktop.ImportTool.Views
             var vm = DataContext as MainWindowViewModel;
             if (vm == null) return;
 
-            // Helper to remove all panes for a key (used when persisted Open=false)
-            void RemoveAllPanesForKey(string key)
-            {
-                try
-                {
-                    var matches = Docking.GetAllChildren().OfType<RadPane>().Where(p =>
-                    {
-                        var t = (RadDocking.GetSerializationTag(p) ?? p.Header)?.ToString() ?? string.Empty;
-                        var h = (p.Header ?? string.Empty).ToString() ?? string.Empty;
-                        return string.Equals(t, key, StringComparison.OrdinalIgnoreCase) || string.Equals(h, key, StringComparison.OrdinalIgnoreCase);
-                    }).ToList();
-
-                    foreach (var extra in matches)
-                    {
-                        try { if (extra.Parent is RadPaneGroup pg) pg.Items.Remove(extra); } catch { }
-                    }
-                }
-                catch { }
-            }
-
             // If persisted closed, ensure no placeholder exists for that key
             if (!tasksOpen) RemoveAllPanesForKey("Tasks");
             if (!historyOpen) RemoveAllPanesForKey("History");
@@ -244,6 +224,30 @@ namespace Desktop.ImportTool.Views
                 catch { }
             }
         }
+
+        // ... all your existing methods ...
+
+        // At the same indentation as other methods in your MainWindow class
+        public void RemoveAllPanesForKey(string key)
+        {
+            try
+            {
+                var matches = Docking.GetAllChildren().OfType<RadPane>().Where(p =>
+                {
+                    var t = (RadDocking.GetSerializationTag(p) ?? p.Header)?.ToString() ?? string.Empty;
+                    var h = (p.Header ?? string.Empty).ToString() ?? string.Empty;
+                    return string.Equals(t, key, StringComparison.OrdinalIgnoreCase) || string.Equals(h, key, StringComparison.OrdinalIgnoreCase);
+                }).ToList();
+
+                foreach (var extra in matches)
+                {
+                    try { if (extra.Parent is RadPaneGroup pg) pg.Items.Remove(extra); } catch { }
+                }
+            }
+            catch { }
+        }
+
+        // ... the rest of your methods in the MainWindow class ...
 
         // Find any pane with matching tag/header (first found)
         private RadPane FindAnyPaneByKey(string paneKey)
