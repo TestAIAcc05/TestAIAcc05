@@ -91,7 +91,7 @@
 
             <telerik:RadDocking x:Name="Docking" Margin="0">
                 <i:Interaction.Behaviors>
-                    <svc:DockingBehavior />
+                    <svc:DockingBehavior x:Name="DockingBehaviorInstance" />
                 </i:Interaction.Behaviors>
                 <telerik:RadDocking.DocumentHost>
                     <telerik:RadSplitContainer>
