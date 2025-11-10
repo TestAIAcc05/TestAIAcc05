@@ -21,7 +21,7 @@ namespace Desktop.ImportTool.Views
             InitializeComponent();
 
             // Avoid biasing DockingService with a single group - pass null
-            _dockingService = new DockingService(this, MainDocking, null);
+            _dockingService = new DockingService(this, Docking, null);
 
             DataContext = new MainWindowViewModel(_dockingService);
 
@@ -36,7 +36,7 @@ namespace Desktop.ImportTool.Views
             {
                 try { DeduplicateLayout(); } catch { }
                 try { LoadSimpleLayoutAndRestorePanes(); } catch { RestorePaneContents(); }
-                try { MainDocking.UpdateLayout(); } catch { }
+                try { Docking.UpdateLayout(); } catch { }
             }), DispatcherPriority.Loaded);
         }
 
@@ -47,7 +47,7 @@ namespace Desktop.ImportTool.Views
                 // Make sure logical tree is stabilized and we dedupe before save
                 try { DeduplicateLayout(); } catch { }
                 try { RestorePaneContents(); } catch { }
-                try { MainDocking.UpdateLayout(); } catch { }
+                try { Docking.UpdateLayout(); } catch { }
 
                 // Persist our small layout: open flags and indices
                 try { SaveSimpleLayout(); } catch { }
@@ -66,8 +66,8 @@ namespace Desktop.ImportTool.Views
         {
             try
             {
-                var split = MainDocking.GetAllChildren().OfType<RadSplitContainer>().FirstOrDefault();
-                var groupsInSplit = split?.Items.OfType<RadPaneGroup>().ToList() ?? MainDocking.GetAllChildren().OfType<RadPaneGroup>().ToList();
+                var split = Docking.GetAllChildren().OfType<RadSplitContainer>().FirstOrDefault();
+                var groupsInSplit = split?.Items.OfType<RadPaneGroup>().ToList() ?? Docking.GetAllChildren().OfType<RadPaneGroup>().ToList();
 
                 bool tasksOpen = false, historyOpen = false;
                 int? tasksIndex = null, historyIndex = null;
@@ -130,11 +130,11 @@ namespace Desktop.ImportTool.Views
             }
 
             // Ensure split and enough groups exist
-            var split = MainDocking.GetAllChildren().OfType<RadSplitContainer>().FirstOrDefault();
+            var split = Docking.GetAllChildren().OfType<RadSplitContainer>().FirstOrDefault();
             if (split == null)
             {
                 split = new RadSplitContainer();
-                try { MainDocking.Items.Add(split); } catch { }
+                try { Docking.Items.Add(split); } catch { }
             }
 
             int neededGroups = Math.Max(tasksIndex, historyIndex) + 1;
@@ -156,7 +156,7 @@ namespace Desktop.ImportTool.Views
             {
                 try
                 {
-                    var matches = MainDocking.GetAllChildren().OfType<RadPane>().Where(p =>
+                    var matches = Docking.GetAllChildren().OfType<RadPane>().Where(p =>
                     {
                         var t = (RadDocking.GetSerializationTag(p) ?? p.Header)?.ToString() ?? string.Empty;
                         var h = (p.Header ?? string.Empty).ToString() ?? string.Empty;
@@ -250,7 +250,7 @@ namespace Desktop.ImportTool.Views
         {
             try
             {
-                var all = MainDocking.GetAllChildren().OfType<RadPane>();
+                var all = Docking.GetAllChildren().OfType<RadPane>();
                 foreach (var p in all)
                 {
                     try
@@ -276,7 +276,7 @@ namespace Desktop.ImportTool.Views
 
             try
             {
-                var all = MainDocking.GetAllChildren().OfType<RadPane>().ToList();
+                var all = Docking.GetAllChildren().OfType<RadPane>().ToList();
                 foreach (var pane in all)
                 {
                     try
@@ -312,7 +312,7 @@ namespace Desktop.ImportTool.Views
 
             try
             {
-                var panes = MainDocking.GetAllChildren().OfType<RadPane>().Where(p =>
+                var panes = Docking.GetAllChildren().OfType<RadPane>().Where(p =>
                 {
                     try
                     {
@@ -358,7 +358,7 @@ namespace Desktop.ImportTool.Views
         {
             try
             {
-                var panes = MainDocking.GetAllChildren().OfType<RadPane>().ToList();
+                var panes = Docking.GetAllChildren().OfType<RadPane>().ToList();
                 if (!panes.Any()) return;
                 var keys = new[] { "Tasks", "History" };
 
@@ -399,7 +399,7 @@ namespace Desktop.ImportTool.Views
                         try { if (extra.Parent is RadPaneGroup parent) parent.Items.Remove(extra); } catch { }
                     }
 
-                    panes = MainDocking.GetAllChildren().OfType<RadPane>().ToList();
+                    panes = Docking.GetAllChildren().OfType<RadPane>().ToList();
                 }
             }
             catch { }

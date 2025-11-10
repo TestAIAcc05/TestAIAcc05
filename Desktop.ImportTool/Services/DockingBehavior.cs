@@ -1,7 +1,8 @@
-﻿// Paste this file into your project under the namespace Desktop.ImportTool.Services
-// If your project uses the older Blend SDK interactivity, change the using to System.Windows.Interactivity.
-// Make sure the file's Build Action is "Compile" and the namespace matches the xmlns in your XAML.
+﻿// Minimal DockingBehavior for RadDocking.
+// Put this file into namespace Desktop.ImportTool.Services (same assembly as MainWindow XAML).
+// If your project uses System.Windows.Interactivity instead of Microsoft.Xaml.Behaviors, change the using.
 using System;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Interactivity;
@@ -10,12 +11,13 @@ using Telerik.Windows.Controls.Docking;
 
 namespace Desktop.ImportTool.Services
 {
-    // Minimal DockingBehavior that exposes an attached PaneId property (for XAML usage
-    // like svc:DockingBehavior.PaneId="Tasks") and a small helper to show/hide panes by that PaneId.
     public class DockingBehavior : Behavior<RadDocking>
     {
-        // Attached property used on RadPane (or any element) to give it a logical id.
-        // Usage: svc:DockingBehavior.PaneId="Tasks"
+        // Singleton instance so ViewModels/services can call into the attached behavior without changing DI.
+        // This is intentionally simple and small to avoid invasive refactors.
+        public static DockingBehavior Instance { get; private set; }
+
+        // Attached PaneId so XAML can mark panes: svc:DockingBehavior.PaneId="Tasks"
         public static readonly DependencyProperty PaneIdProperty =
             DependencyProperty.RegisterAttached(
                 "PaneId",
@@ -35,105 +37,196 @@ namespace Desktop.ImportTool.Services
             return (string)element.GetValue(PaneIdProperty);
         }
 
-        // Example small lifecycle handling (load/exit saving omitted here to keep class minimal).
+        readonly string _layoutFilePath;
+
+        public DockingBehavior()
+        {
+            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                                   AppDomain.CurrentDomain.FriendlyName ?? "ImportTool");
+            Directory.CreateDirectory(dir);
+            _layoutFilePath = Path.Combine(dir, "RadDockingLayout.xml");
+        }
+
         protected override void OnAttached()
         {
             base.OnAttached();
-            // You can hook events here if you need to auto-save/restore etc.
+
+            // If there's already an instance registered, replace it (single-instance behavior for simplicity).
+            Instance = this;
+
+            AssociatedObject.Loaded += OnLoaded;
+            Application.Current.Exit += OnAppExit;
         }
 
         protected override void OnDetaching()
         {
             base.OnDetaching();
+
+            if (AssociatedObject != null)
+                AssociatedObject.Loaded -= OnLoaded;
+
+            Application.Current.Exit -= OnAppExit;
+
+            // clear singleton if this instance is being removed
+            if (Instance == this) Instance = null;
         }
 
-        // Public helper to show/hide a pane by PaneId (used by your viewmodel/service).
-        // Returns true if an operation was performed.
+        void OnLoaded(object s, RoutedEventArgs e)
+        {
+            // Attempt to restore saved layout
+            if (!File.Exists(_layoutFilePath)) return;
+
+            try
+            {
+                var bytes = File.ReadAllBytes(_layoutFilePath);
+                using (var ms = new MemoryStream(bytes))
+                {
+                    // First try API that accepts Stream
+                    var mi = AssociatedObject.GetType().GetMethod("LoadLayout", new[] { typeof(Stream) })
+                             ?? AssociatedObject.GetType().GetMethod("RestoreLayout", new[] { typeof(Stream) });
+
+                    if (mi != null)
+                    {
+                        ms.Position = 0;
+                        mi.Invoke(AssociatedObject, new object[] { ms });
+                        return;
+                    }
+
+                    // Fallback to string xml variant
+                    ms.Position = 0;
+                    var xml = new StreamReader(ms).ReadToEnd();
+                    mi = AssociatedObject.GetType().GetMethod("LoadLayout", new[] { typeof(string) })
+                         ?? AssociatedObject.GetType().GetMethod("RestoreLayout", new[] { typeof(string) });
+                    mi?.Invoke(AssociatedObject, new object[] { xml });
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("DockingBehavior: restore failed: " + ex);
+            }
+        }
+
+        void OnAppExit(object s, ExitEventArgs e)
+        {
+            // Save layout on exit
+            try
+            {
+                using (var ms = new MemoryStream())
+                {
+                    var mi = AssociatedObject.GetType().GetMethod("SaveLayout", new[] { typeof(Stream) })
+                             ?? AssociatedObject.GetType().GetMethod("Save", new[] { typeof(Stream) });
+
+                    if (mi != null)
+                    {
+                        mi.Invoke(AssociatedObject, new object[] { ms });
+                        File.WriteAllBytes(_layoutFilePath, ms.ToArray());
+                        return;
+                    }
+
+                    // fallback to SaveLayout() => string
+                    mi = AssociatedObject.GetType().GetMethod("SaveLayout", Type.EmptyTypes)
+                         ?? AssociatedObject.GetType().GetMethod("Save", Type.EmptyTypes);
+                    if (mi != null && mi.ReturnType == typeof(string))
+                    {
+                        var xml = mi.Invoke(AssociatedObject, null) as string;
+                        if (!string.IsNullOrEmpty(xml))
+                            File.WriteAllText(_layoutFilePath, xml);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("DockingBehavior: save failed: " + ex);
+            }
+        }
+
+        // Public helper to show/hide pane by PaneId (used by your ToggleButton property setter)
         public bool SetPaneVisibilityById(string paneId, bool visible)
         {
-            if (AssociatedObject == null || string.IsNullOrWhiteSpace(paneId))
-                return false;
+            if (AssociatedObject == null || string.IsNullOrWhiteSpace(paneId)) return false;
 
-            var pane = FindPaneById(paneId);
+            // try fast search over top-level panes
+            var pane = AssociatedObject.Items
+                        .OfType<object>()
+                        .OfType<RadPane>()
+                        .FirstOrDefault(p => string.Equals(GetPaneId(p), paneId, StringComparison.OrdinalIgnoreCase));
+
+            // fallback to deeper logical/visual search
+            if (pane == null)
+            {
+                try
+                {
+                    pane = AssociatedObject.Descendents()
+                           .OfType<RadPane>()
+                           .FirstOrDefault(p => string.Equals(GetPaneId(p), paneId, StringComparison.OrdinalIgnoreCase));
+                }
+                catch { /* ignore */ }
+            }
+
             if (pane == null) return false;
 
             try
             {
                 if (visible)
                 {
-                    var show = pane.GetType().GetMethod("Show");
-                    if (show != null) { show.Invoke(pane, null); return true; }
-
-                    // fallback: try IsHidden property
-                    var isHiddenProp = pane.GetType().GetProperty("IsHidden");
-                    if (isHiddenProp != null && isHiddenProp.CanWrite) { isHiddenProp.SetValue(pane, false); return true; }
+                    var mi = pane.GetType().GetMethod("Show");
+                    if (mi != null) { mi.Invoke(pane, null); return true; }
+                    var isHidden = pane.GetType().GetProperty("IsHidden");
+                    if (isHidden != null && isHidden.CanWrite) { isHidden.SetValue(pane, false); return true; }
                 }
                 else
                 {
-                    var hide = pane.GetType().GetMethod("Hide");
-                    if (hide != null) { hide.Invoke(pane, null); return true; }
-
-                    var isHiddenProp = pane.GetType().GetProperty("IsHidden");
-                    if (isHiddenProp != null && isHiddenProp.CanWrite) { isHiddenProp.SetValue(pane, true); return true; }
+                    var mi = pane.GetType().GetMethod("Hide");
+                    if (mi != null) { mi.Invoke(pane, null); return true; }
+                    var isHidden = pane.GetType().GetProperty("IsHidden");
+                    if (isHidden != null && isHidden.CanWrite) { isHidden.SetValue(pane, true); return true; }
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"DockingBehavior.SetPaneVisibilityById error: {ex}");
+                System.Diagnostics.Debug.WriteLine("DockingBehavior.SetPaneVisibilityById error: " + ex);
             }
 
             return false;
         }
 
-        // Find a RadPane that has svc:DockingBehavior.PaneId == paneId
-        private RadPane FindPaneById(string paneId)
+        // Optional: call to force immediate save
+        public void SaveLayout()
         {
-            // First check straight Panes collection (fast)
-            foreach (var p in AssociatedObject.Panes())
+            try
             {
-                try
+                using (var ms = new MemoryStream())
                 {
-                    var rp = p as RadPane;
-                    if (rp == null) continue;
-                    var id = GetPaneId(rp);
-                    if (string.Equals(id, paneId, StringComparison.OrdinalIgnoreCase))
-                        return rp;
+                    var mi = AssociatedObject.GetType().GetMethod("SaveLayout", new[] { typeof(Stream) })
+                             ?? AssociatedObject.GetType().GetMethod("Save", new[] { typeof(Stream) });
+                    if (mi != null)
+                    {
+                        mi.Invoke(AssociatedObject, new object[] { ms });
+                        File.WriteAllBytes(_layoutFilePath, ms.ToArray());
+                        return;
+                    }
+                    mi = AssociatedObject.GetType().GetMethod("SaveLayout", Type.EmptyTypes)
+                         ?? AssociatedObject.GetType().GetMethod("Save", Type.EmptyTypes);
+                    if (mi != null && mi.ReturnType == typeof(string))
+                    {
+                        var xml = mi.Invoke(AssociatedObject, null) as string;
+                        if (!string.IsNullOrEmpty(xml)) File.WriteAllText(_layoutFilePath, xml);
+                    }
                 }
-                catch { /* ignore malformed items */ }
             }
-
-            // Fall back to deeper search: descend visual/logical tree of docking to find RadPane elements
-            var all = AssociatedObject.Descendents().OfType<RadPane>();
-            foreach (var rp in all)
+            catch (Exception ex)
             {
-                try
-                {
-                    var id = GetPaneId(rp);
-                    if (string.Equals(id, paneId, StringComparison.OrdinalIgnoreCase))
-                        return rp;
-                }
-                catch { }
+                System.Diagnostics.Debug.WriteLine("DockingBehavior.SaveLayout error: " + ex);
             }
-
-            return null;
         }
     }
 
-    // Simple extension helpers used above (keep minimal)
-    internal static class RadDockingHelpers
+    // Minimal extension methods used above. Keep them small to avoid extra references.
+    internal static class RadDockingExtensions
     {
         public static System.Collections.Generic.IEnumerable<object> Descendents(this RadDocking docking)
         {
-            // minimal safe enumeration of docking.Items
             foreach (var item in docking.Items) yield return item;
-        }
-
-        public static System.Collections.Generic.IEnumerable<RadPane> Panes(this RadDocking docking)
-        {
-            foreach (var item in docking.Items)
-            {
-                if (item is RadPane rp) yield return rp;
-            }
         }
     }
 }

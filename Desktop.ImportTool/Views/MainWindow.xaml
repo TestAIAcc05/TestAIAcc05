@@ -7,7 +7,8 @@
         xmlns:local="clr-namespace:Desktop.ImportTool.Views" 
         xmlns:converters="clr-namespace:Desktop.ImportTool.Converters"
         xmlns:viewmodels="clr-namespace:Desktop.ImportTool.ViewModels"
-        xmlns:svc="clr-namespace:Desktop.ImportTool.Services"
+        xmlns:svc="clr-namespace:Desktop.ImportTool.Services" 
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         mc:Ignorable="d"
         Title="MainWindow"
         Background="#2D2D2D"
@@ -25,8 +26,7 @@
                     <Button Content="History" Margin="2" Padding="6,2"
                     Command="{Binding OpenHistoryPaneCommand}"/>
 
-                    <ToggleButton Content="Tasks" Width="90" Margin="2"
-                  Command="{Binding TogglePaneCommand}" CommandParameter="Tasks" />
+                    <ToggleButton Content="Tasks" IsChecked="{Binding IsTasksPaneOpen, Mode=TwoWay}" />
                     <ToggleButton Content="History" Width="90" Margin="2"
                   Command="{Binding TogglePaneCommand}" CommandParameter="History" />
                     <!--<telerik:RadToggleButton x:Name="ExplorerMenuItem"
@@ -89,7 +89,10 @@
                 </StackPanel>
             </Border>
 
-            <telerik:RadDocking x:Name="MainDocking" Margin="0">
+            <telerik:RadDocking x:Name="Docking" Margin="0">
+                <i:Interaction.Behaviors>
+                    <svc:DockingBehavior />
+                </i:Interaction.Behaviors>
                 <telerik:RadDocking.DocumentHost>
                     <telerik:RadSplitContainer>
                         <telerik:RadPaneGroup x:Name="TasksPaneGroup" HorizontalAlignment="Stretch" >
@@ -110,7 +113,7 @@
                     </telerik:RadSplitContainer>
                 </telerik:RadDocking.DocumentHost>
             </telerik:RadDocking>
-            <!--<telerik:RadDocking x:Name="MainDocking">
+            <!--<telerik:RadDocking x:Name="Docking">
                 <telerik:RadDocking.DocumentHost>
                     <telerik:RadSplitContainer>
                         <telerik:RadPaneGroup>

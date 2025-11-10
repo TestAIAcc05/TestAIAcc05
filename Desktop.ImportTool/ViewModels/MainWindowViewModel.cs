@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Desktop.ImportTool.Infrastructure;
 using Desktop.ImportTool.Models;
+using Desktop.ImportTool.Services;
 using Desktop.ImportTool.Views;
 
 namespace Desktop.ImportTool.ViewModels
@@ -43,6 +44,30 @@ namespace Desktop.ImportTool.ViewModels
         public ICommand OpenHistoryPaneCommand { get; }
 
         private readonly IDockingService _dockingService;
+
+        private bool _isTasksPaneOpen;
+        public bool IsTasksPaneOpen
+        {
+            get => _isTasksPaneOpen;
+            set
+            {
+                if (_isTasksPaneOpen == value) return;
+                _isTasksPaneOpen = value;
+                OnPropertyChanged(nameof(IsTasksPaneOpen));
+
+                // Tell behavior to show/hide pane. This uses the singleton Instance.
+                // Requires the behavior to be attached in the visual tree so Instance != null.
+                try
+                {
+                    DockingBehavior.Instance?.SetPaneVisibilityById("Tasks", value);
+                }
+                catch (Exception ex)
+                {
+                    // swallow or log
+                    System.Diagnostics.Debug.WriteLine("TogglePane error: " + ex);
+                }
+            }
+        }
 
         public MainWindowViewModel() : this(null) { }
 
